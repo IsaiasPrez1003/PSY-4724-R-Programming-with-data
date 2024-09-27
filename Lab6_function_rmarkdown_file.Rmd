@@ -1,0 +1,264 @@
+---
+title: "Lab 6 Functions"
+author: "Isaias Perez"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r installing packages}
+#install.packages("tidyverse")
+```
+
+```{r library}
+library(tidyverse)
+
+#the following code removes scientific notation
+options(scipen = 999)
+```
+
+***1.** To begin, we will use a slightly modified version of the ‘hi’ the function we used in class:*
+
+***a.** Code:* ***i.** hi \<- function(myname)* ***{ ii.** paste("Hi, my name is", myname)}*
+
+***b.** For question 1, use the function to get the output “Hi, my name is -YOUR NAME-*
+
+```{r question 1}
+#The bottom line creates a function named hi. When a character is placed within the "Hi" function, it produce a sentence with the character plugged in.
+Hi <- function(myname) {
+  paste("Hi, my name is", myname)
+  }
+
+Hi("Isaias")
+
+```
+
+***2**. Next, we will make the output a bit more complex.* ***a.*** \*\* Code\*\* ***i**. hi \<- function(partnername, myname){ paste("Hi, my name is", myname, "and my partner for the group presentation’s name is", partnername)}*
+
+***b.** For question 2, use the function to get the below output:* **i.** “Hi, my name is -YOUR NAME- and my partner for the group presentation’s name is -YOUR PARTNER’S NAME-.”\*
+
+```{r question 2}
+
+#This function is slightly more complex. It allows the function "Hi" to use two different names instead of just one.
+Hi <- function(partnername, myname){
+  paste("Hi, my name is", myname, "and my partner for the group presentation name is", partnername)
+}
+
+
+Hi("Alyssa", "Isaias")
+
+```
+
+***3.** Thus far, I’ve provided you with the code for the functions but I also want you to learn how to write them yourself.*
+
+***a.** For question 3, update the code so that your final output is as follows:*
+
+***i.** “Hi, my name is -YOUR NAME- and my partner for the group presentation’s name is -YOUR PARTNER’S NAME-. We are hoping to get a grade of -GRADE YOU’RE AIMING FOR ON THE GROUP PROJECT- out of 70 on the group project that we are presenting next Tuesday about -THE DATASET THAT YOU’RE ANALYZING-.”*
+
+```{r question 3}
+Hi <- function(partnername, myname, desiredgrade, topic){
+  paste("Hi, my name is", myname, "and my partner for the group presentation name is", partnername,". We are hoping to get a grade of", desiredgrade,"out of 70 on the group project that we are presenting next tuesday about",topic)
+}
+
+
+Hi("Alyssa", "Isaias", "70", "the elements that make a superbowl commerical successful")
+```
+
+***4.** Your project sounds really cool. I think your purpose statement will really help motivate your behavior so that you do great on the group project. I think Rachel and I could use one for our (theoretical) group project too.*
+
+***a.** For question 4, change your code’s input to replicate the below output for me and Rachel.*
+
+***1.** “Hi, my name is Jacob and my partner for the group presentation’s name is Rachel. We are hoping to get a grade of 70 out of 70 on the group project that we are presenting next Tuesday about Tom Brady’s last season."*
+
+```{r question 4}
+Hi <- function(partnername, myname, desiredgrade, topic){
+  paste("Hi, my name is", myname, "and my partner for the group presentation name is", partnername,". We are hoping to get a grade of", desiredgrade,"out of 70 on the group project that we are presenting next tuesday about",topic)
+}
+
+
+Hi("Rachel", "Jacob", "70", "Tom Brady's last season")
+```
+
+***5.** While functions can be used to output text, they can also be used for other purposes, such as doing math.*
+
+***a.** For question 5, create a function that multiplies a number by 5, then subtracts by 3, and then divides by 2. After writing it, test it using the number 10 as your input and tell me how you know it works.*
+
+```{r question 5}
+#The bottom code creates the function to be used.
+Q5_function <- function(x) {
+  (10 * 5 - 3)/2
+}
+
+#This is the test to see if the function works. One line is using the function while the other line is the equation by itself without the use of the function. Both should produce the same result when the chunk is ran together
+Q5_function(10)
+
+(10 * 5 - 3)/2
+
+```
+
+***6.** Having a function that works on one input number is helpful, but functions are not limited to only one number as an input.*
+
+***a.** To test this, do the following:*
+
+***i.** Add this line of code:*
+
+***1.** function_testing \<- c(1:10)*
+
+***ii.** Then run re-run the function you created in Question 5 with each of these inputs:*
+
+***1.** c(1:10)* ***2.** function_testing*
+
+***b.** For question 6, tell me why your function outputted the scores that it did and why the scores were equivalent when c(1:10) and function_testing were used as your input term.*
+
+```{r question 6}
+function_testing <- c(1:10)
+
+Q5_function(c(1:10))
+
+Q5_function(fucntion_testing)
+
+#Both c(1:10) and "function_testing" is essentially the same. "function_testing is just the variable name assigned to c(1:10).
+
+```
+
+***7.** Additionally, we can combine both numbers and text in a function. As an example, we may wish to do this when we have multiple column names that follow a pattern such as JobSat_1, JobSat_2, JobSat_3, etc.*
+
+***a.** For question 7, combine what you learned about using the paste function (you may want to consider the paste0 function that operates the same except it does not use spaces between input terms) and what you learned in Question 6 to create a function to output the following values when you input a set of numbers:*
+
+***-** i.Grade_1 ii. Grade_2 iii. Grade_3 iv. Grade_4 v. Grade_5*
+
+```{r question 7}
+Q7_function <- function(x){
+  print(paste0("Grade_", x))
+}
+
+Q7_function(c(1:5))
+
+
+```
+
+***8.** Another crucial pre-packaged function that you can use to maximize the power of your customized functions is ifelse. Within mtcars, I might use an ifelse function to see whether a car is good on gas or not. After writing that code, I might also use mutate to create a new column that identifies those cars for me so that I can quickly find the types of cars I want.*
+
+***a.** Code* ***i.*** **data \<- mtcars %\>%** ii.\*\*mutate(gas_quality = ifelse(mpg \> 30, "Good", "Bad"))\*
+
+***b.** Upon further reflection, I realize that gas mileage is not as binary as good and bad. I think we should create some more categories.*
+
+***c.** For question 8, build in additional ifelse() calls that add more categories of gas_quality and tell me how you know your code worked.*
+
+***-**i. mpg \> 30: “Really good” ii. mpg \> 25: “Good” iii. mpg \> 20: “Okay” iv. mpg \> 10: “Bad” v. otherwise: “Really bad”*
+
+```{r question 8}
+
+#This line takes mtcars and assigns it the name data. Additionally, this line also creates a new column within the data set and assigns either a good rating to cars with mpg greater than 30 and bad rating to cars with mpg less then 30. 
+data <- mtcars %>%
+  mutate(gas_quality = ifelse(mpg > 30, "Good", "Bad"))
+
+```
+
+```{r question 8 part i}
+
+#This line further categorizes th mpg of cars.
+data <- mtcars %>%
+  mutate(gas_quality = ifelse(mpg > 30, "Really good  ",
+                              ifelse(mpg > 25, "Good  ",
+                                     ifelse(mpg > 20, "Okay  ",
+                                            ifelse(mpg > 10, "Bad  ",
+                                                   ifelse(mpg > 5, "Really bad  "))))))
+
+#This line quickly shows the changes made from the code above.
+data$gas_quality
+                
+            
+
+```
+
+***9.** Just because functions are written by someone else doesn’t mean that you can’t change them either. For me, I’ve made changes to corstars to alter the number of stars it outputs for p \<.001 and p \< .0001. It’s also important to remember we can set functions to output multiple pieces of information using lists.*
+
+***a.** To help you get comfortable with changing functions and using lists, do the following:* ***i.** Call in the corstars function* ***1.** Remember that you have to place the function call within the R Markdown file if you want your file to be reproducible* ***ii.** Update the corstars function so that you get the following output within a list:* ***1.** The final correlation matrix (called Rnew within the function) as ‘final_table’ within your list.* ***2.** The original correlation matrix (called correlation_matrix within the function) as ‘original_table’ within your list.*
+
+***b.** For question 9, run your new corstars function on the ‘mtcars’ dataset.*
+
+```{r corstars Function}
+
+#Replaced all instances 'renew' replaced with 'final_table' and 'correlation_matrix' replaced with 'original_table'
+
+corstars <-function(x, method=c("pearson", "spearman"), removeTriangle=c("upper", "lower"),
+                    result=c("none", "html", "latex")){
+#Compute correlation matrix
+require(Hmisc)
+x <- as.matrix(x)
+original_table<-rcorr(x, type=method[1])
+R <- original_table$r # Matrix of correlation coeficients
+p <- original_table$P # Matrix of p-value 
+  
+## Define notions for significance levels; spacing is important.
+mystars <- ifelse(p < .0001, "**  ", 
+                  ifelse(p < .001, "**  ", 
+                         ifelse(p < .01, "**  ", 
+                                ifelse(p < .05, "*   ", "    "))))
+  
+## trunctuate the correlation matrix to two decimal
+R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1]
+  
+## build a new matrix that includes the correlations with their apropriate stars
+final_table <- matrix(paste(R, mystars, sep=""), ncol=ncol(x))
+diag(final_table) <- paste(diag(R), " ", sep="")
+rownames(final_table) <- colnames(x)
+colnames(final_table) <- paste(colnames(x), "", sep="")
+  
+## remove upper triangle of correlation matrix
+if(removeTriangle[1]=="upper"){
+  final_table <- as.matrix(final_table)
+  final_table[upper.tri(final_table, diag = TRUE)] <- ""
+  final_table <- as.data.frame(final_table)
+  }
+  
+## remove lower triangle of correlation matrix
+else if(removeTriangle[1]=="lower"){
+  final_table <- as.matrix(final_table)
+  final_table[lower.tri(final_table, diag = TRUE)] <- ""
+  final_table <- as.data.frame(final_table)
+  }
+  
+## remove last column and return the correlation matrix
+return(final_table)
+}
+```
+
+```{r question 9}
+#running the updated corstars function on mtcar
+corstars(mtcars)
+```
+
+***10.** When you make a function there may be times that you need one particular piece of information at a specific time. In example, maybe I want to see the exact p values, which are saved as “p” within the ‘original_table’ part of the list we just made.* ***a.** For question 10, run corstars on the original mtcars dataset and then save your new corstars output as ‘output’. Then run the code str(output) and use its output to figure out how to call the following:* ***i.** The complete original correlation matrix* ***ii.** Just the p values within the original correlation matrix.*
+
+```{r question 10}
+output <- corstars(mtcars)
+
+str(output)
+```
+
+```{r question 10 i}
+#By typing output we are able to get the original correlation matrix.
+output
+```
+
+```{r question 10 ii}
+#These lines only show the p-values.
+print(output$mpg) 
+print(output$cyl) 
+print(output$disp)
+print(output$hp) 
+print(output$drat) 
+print(output$wt) 
+print(output$qsec)
+print(output$vs) 
+print(output$am)
+print(output$gear) 
+print(output$carb)
+```

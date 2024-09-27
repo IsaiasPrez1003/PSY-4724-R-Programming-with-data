@@ -1,0 +1,181 @@
+---
+title: 'Lab 4: tidyr'
+author: "Isaias Perez"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*#Before we begin, do the following to set up the assignment: Create an R Markdown document titled “Lab 4: tidyr”) & Load the package ‘tidyverse’ (which contains tidyr, dplyr, and ggplot2)*
+
+```{r loading packages}
+library(tidyverse)
+```
+
+```{r assigning name to dataset}
+#This line of code will rename the internal data set construction into const.
+const <- construction
+```
+
+# Construction
+
+## Tidying Data
+
+*#1. For question 1, use the head() function on the internal “construction” dataset to only show me the first 5 rows and then tell me whether or not this data is ‘tidy’ and whether it is in a wide or a longer format.*
+
+```{r information of const dataset}
+head(const, n = 5)
+
+#This data is not 'tidy' and has some columns which can be altered. Additionally, this dataset is presented in a wide format.
+```
+
+*\# 1b. Create a variable called “const” that takes the values of the year, month, and the 4 region variables (i.e. everything from “construction” except the 3 “unit” variables).*
+
+```{r select function}
+# This line of code will filter down the total amount of columns from 9 to 6 total columns.
+
+const <- select(construction, Year, Month, Northeast, Midwest, South, West)
+```
+
+*\# 2. For question 2, show me the output of your str() function and then tell me the following pieces of information: i. How many rows is the dataset? ii. How many columns is the dataset? iii. What are the names of the columns and what kind of variable is each column?*
+
+```{r str function and additonal information}
+str(const)
+
+# i. This dataset is comprised of 9 rows.
+# ii. There are now 6 columns.
+#iii. Columns (year = numeric), (Month = character), (Northeast = Numeric), (Midwest = Numeric), (West = Numeric) 
+
+```
+
+```{r changining Dataset from wide to long}
+# Beginning of code to pipe "const" and assign the new prodcut with a different variable name.
+const_long <- const %>% 
+  pivot_longer(
+    cols = c(Northeast, Midwest, South, West),  #This section directs R to manipulate the following columns and create a new column with all catagoreis included within in. 
+    names_to = "Region", #assigns name to newly formed column.
+    values_to = "Jobs_completed") #this assigns all values to a new column and adds a name.
+
+const_long
+
+
+
+#b.	For question 3, tell me why you chose to input each “FILL_THIS_IN” call as you did, and provide a comment for each line of code describing what the line does.
+
+# The question asks to alter the dataset so that jobs completed is listed for each region and year. I selected columns Northeast, Midwest, South, and West and placed them within cols = c(FILL_THIS_IN) as ths would direct R to combine the columns. I also readjusted the labeling to match what he question had wanted.
+
+
+```
+
+```{r questions 4 & 5}
+# For question 4, tell me whether this data is “tidy” and why you believe that to be the case.
+
+#This data is tidy. The dataset has a structured format and no values are missing.
+
+
+#For question 5, we will begin that process. Specifically, I want you to interpret the data and tell me how the regions compare in construction jobs completed for each month of the 2018 season.
+
+
+
+summary(const$"Northeast") 
+
+summary(const$"Midwest")
+
+summary(const$"South")
+
+summary(const$"West")
+
+#Using the summary function, the mean number of jobs completed was found for each region. This then led to a visual inspection of the const_long dataset. After filtering the jobs_completed column from high to low, it was observed that for the south region, the month of May had the most completed jobs. For the west region, the month of June had the most jobs completed. The Midwest region had the most jobs completed in the month of August. Lastly, the Northeast had the most jobs completed in the month of march.
+
+```
+
+*\# For question 6, create a bar (geom_bar) graph using ggplot depicting the number of jobs completed for each region, per month in the const_long data (Hint: x = Month). Tell me whether this plot aligns with your prior interpretation.*
+
+```{r geom_bar construction}
+
+ggplot(const_long, 
+       aes(x = Month, 
+           y = Jobs_completed,
+           fill = Region)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs( x = "Month",
+        y = "Number of Jobs Completed",
+        fill = "Region",
+        title = "Jobs completed by region per month") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+  
+```
+
+## Using Pivot Functions
+
+*#7 For question 7, change the Month column to be a factor variable. Input the levels of the factor as the unique values of Months, such that the order of the months are preserved. Then use the str() function on the dataset once again and tell me how you know your code worked. Replot your graph code from question 6. The x-axis should be correctly ordered now.*
+
+```{r recatagorizing month column}
+
+# This code sets up the order in which the months will be displayed on the x-axis
+Months_ordered <- c("January", "February", "March", "April", "May", "June", "July", "August", "September")
+
+# This line selects th month column within the const_long dataset and alters the order of months on the x-axis.
+const_long$Month <- factor(const_long$Month, levels = Months_ordered)
+
+# this line is a rerun of the above graph, but with an ordered month format.
+ggplot(const_long, 
+       aes(x = Month, 
+           y = Jobs_completed,
+           fill = Region)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs( x = "Month",
+        y = "Number of Jobs Completed",
+        fill = "Region",
+        title = "Jobs completed by region per month")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+str(const_long)
+```
+
+*\# For question 8, create a new variable called “const_arranged” which rearranges the table so that it looks like the below:*
+
+```{r rearranging months}
+const_arranged <- const_long %>% arrange(Region) #changes the region column to group each area together.
+
+head(const_arranged)
+```
+
+*\# 9 For question 9, update the below code to change the dataset back to the way it was. How might this wide organization of the data affect our ability to interpret and graph our dataset, when compared to the long data style?*
+
+```{r }
+
+const_wide <- const_long %>%
+  pivot_wider(
+    id_cols  = c(Month,Year), 
+    names_from = Region, 
+    values_from = Jobs_completed)
+
+const_wide
+
+str(const_wide)
+
+#By reverting the dataset back to the wide format, we lose the jobs completed column which was used for the y-axis in the long format graph.
+
+```
+
+# Using R Markdown tools
+
+*\# 10. Lastly, I would like to practice using the R Markdown editing features. Specifically, refer back to the R Markdown cheat sheet (Week 2 PowerPoint) and do the following: For question 10: i. Create a level one header titled “Construction” data before Question 1 ii. Create a level two header after the level one header titled “Tidying Data” iii. Create a level two header after question 6 titled “Using Pivot Functions” iv. Create a level three header before this question titled “Using R Markdown Tools” v. Write the below, including both font types (bold, italic, underline, etc.) and the bulleted list.*
+
+## Hey! Look at all the cool things I can do in R Markdown!
+
+### I can make a bulleted list and format my text
+
+1.  **I can bold text**
+2.  *I can italicize text*
+3.  ~~I can strikethrough text~~

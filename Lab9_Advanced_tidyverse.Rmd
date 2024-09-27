@@ -1,0 +1,218 @@
+---
+title: 'Lab 9: Advanced tidyverse'
+author: "Isaias Perez"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r installing packages}
+#install.packages("here")
+#install.packages("tidyverse")
+#install.packages("psych")
+#install.packages("stringr")
+```
+
+```{r library, include=FALSE}
+
+library(here)
+library(tidyverse)
+library(psych)
+library(dplyr)
+library(stringr)
+
+options(scipen = 999)
+
+```
+
+***1.** To begin, the dataset we are using this week is not available within an R library. Accordingly, we will need to download the dataset and then import it into R. We have done this before, but it’s been a while. You can refer back to the notes from the first 2 weeks for more information on this.*
+
+***a.** For Q1, create a folder that contains your R Markdown file and the “midwest.csv” dataset, which can be found on under Week 10’s module. Then use the below code to import your file. After doing so, run the head function within your R Markdown file to confirm that your dataset was properly imported.*
+
+```{r question 1}
+#This line is used to prompt R to access the csv file and import the data into the global environment.
+data <- read.csv(here("midwest.csv"))
+
+head(data)
+
+
+```
+
+***2.** For Q2, use the codebook to identify the common aspect of the column names that denotes a given column contains a percentage. Tell me in 1-2 sentences what the common aspect is and how you determined that.*
+
+***a.**Follow this link to the dataset’s codebook: <https://search.r-project.org/CRAN/refmans/ggplot2/html/midwest.html>*
+
+```{r question 2}
+#using the link above, I was able to determine that the columns that start with "perc" is the common aspect which communicates that the column contains a percentage. For example, columns such as perc-white, perc-black, and per-amerindan contain data which represents the percentage's of each race in a given county/state.
+
+```
+
+***3.** In looking at the percentage columns, I noticed that values were not in decimals but rather were greater than 1. To avoid confusion, I want to change these columns so that they look like decimals, which is typically how we write out percentages. To begin, let’s begin by mutating only one column to figure out how to create our mutate call.*
+
+a.  For Q3, use the mutate function to change the ‘percentage white’ column to a decimal. After doing so, use the head function on that column to report only the default number of responses (6)
+
+```{r question 3 }
+
+#This line of code is meant to alter the 'percwhite' column and divide all value within this column by 100.
+data <- data %>% 
+  mutate(percwhite = percwhite / 100)
+
+head(data$percwhite)
+```
+
+***4.** In Q3 we figured out how to use mutate to turn our current whole number percentages into decimal percentages and used it on the “percentage white” column. However, there are far more percentage columns than just “percentage white.” Rather than individually crafting each of these calls, we can use the across function to automate this.*
+
+***a.** For Q4, update your mutate call to use across() to update all of your percentage columns.*
+
+```{r question 4}
+#recalling original data set
+data <- read.csv(here("midwest.csv"))
+
+# This line is similar to question 3 but with the addition of the across and starts_with function which are needed to alter all columns which start with "perc".
+data <- data %>%
+  mutate(across(starts_with("perc"), ~.x / 100))
+
+head(data)
+
+```
+
+***5.** It is critically important when cleaning data to confirm that each step you make does exactly what you think it does. One way I like to do this is by using the select function.*
+
+***a.** For Q5, combine the select function with the starts_with function to call only rows that are supposed to have percentages. Then use the head function to call the default number of rows (6).*
+
+```{r question 5}
+
+# This line is meant to pull all columns which starts with 'perc' and add them to a new dataset named "q5_data"
+q5_data <- data %>%
+  select(starts_with("perc"))
+
+head(q5_data)
+
+```
+
+***6.** After bringing all of the data out, we should see that each column has been updated. However, we should also be sure that the change we made ‘makes sense’ so to speak.*
+
+\***a.** For Q6, interpret your values for percwhite and percasian. Tell me if the values seem appropriate and accurate.\*\*
+
+```{r question 6}
+# When looking to interpret the values of percwhite and percasain it would be appropriate to evaluate the steps taken to come up with each percentage value.
+
+#For percwhite, we can view the following set up that produces the percentage of white individuals living in Adams county Illinois.
+
+value_of_popwhite <- data$popwhite[1] # These two rows assign values to use in computation
+value_of_poptotal <- data$poptotal[1]
+
+percwhite_of_Adamscounty_IL <- value_of_popwhite / value_of_poptotal #calculation of the percentage of white individuals in Adams county
+
+print(percwhite_of_Adamscounty_IL) #Calculation of value
+data$percwhite[1] #original dataset value.
+
+#By doing this we can insure that the values within the original dataset is accurate.
+
+```
+
+```{r question 6 continued}
+#This can also be done to find the percentage of asian individuals living within the county.
+value_of_popasian <- data$popasian[1] 
+percasian_of_Adamscounty_IL <- value_of_popasian / value_of_poptotal
+
+print(percasian_of_Adamscounty_IL) 
+data$percasian[1] 
+
+#These values are appropriate and accurate after double checking calculation used to produce the percentage values.
+```
+
+\***7.** At this point, our data seems adequately cleaned to me. One variable I think might be interesting as an outcome variable is percentage of people below the poverty line across all of the towns. Refer back to our notes from Lecture 10 to determine how to get the descriptive statistics using the psych package.
+
+***a.** For Q7, tell me the minimum, maximum, and mean score for percentage of people below the poverty line.*
+
+```{r question 7}
+
+q7_dataset <- describe.by(data, data$state, mat = TRUE)
+
+tail(q7_dataset, n = 30)
+
+#The following lines reflect the min, max, and mean of each state.
+
+# IL =  Min: 0.0271, Max: 0.3224, mean: 0.1308
+
+# IN =  Min: 0.0359, Max: 0.1944, mean: 0.1032
+
+# MI =  Min: 0.0413, Max: 0.2641, mean: 0.1422
+
+# OH =  Min: 0.0490, Max: 0.2867, mean: 0.1303
+
+# WI =  Min: 0.0218, Max: 0.4869, mean: 0.1189
+
+
+```
+
+***8.** Upon further thought, I wonder if whether the town is within a city or not has anything to do with the percentage of people below the poverty line.*
+
+***a.** For Q8, use the describe by group function (also covered in Lecture 10) to separate descriptive statistics by metro city status. Tell me the minimum, maximum, and mean of below poverty line rate for each metro city status as well as whether either status seems to have a higher poverty rate than the other. When interpreting, assume 1 means “in a metro area” and 0 means “not in a metro area.”*
+
+```{r question 8, include=FALSE}
+describeBy(data, data$inmetro)
+
+# non-Metro city statistics
+  # Min: 0.06
+  # Max: 0.49
+  # Mean: 0.14
+
+# Metro city statistics
+  # Min: 0.02
+  # Max: 0.24
+  # Mean: 0.10
+
+```
+
+***9.** I’d like to confirm your evaluation of your difference in percentage below poverty line with a regression.*
+
+***a.** For Q9, refer back to our notes from Lecture 11 on how to calculate a regression. Estimate and interpret the regression between metro city status (set as IV) and percentage of population below the poverty line (set as DV). For interpretation, remember 1 means “in a metro area” and 0 means “not in a metro area.” Tell me if the regression is significant and whether you think the difference is meaningful and why.*
+
+```{r queestion 9}
+
+poverty_regression <- lm(percbelowpoverty ~ inmetro, data = data)
+
+summary(poverty_regression)
+
+# Within the coefficient chunk, we can see located at row two and column three that the regression model produced a p value that is marked by three asterisk's. Using the significant codes underneath the chunk we can see that the p-value produced is less then 0.001 making the variable "inmetro" a significant predictor of the percentage of individuals below the poverty level.
+
+```
+
+***10.** For the final prompt, I would like you to get more practice with automating dplyr calls using stringr and base R functions (ex. is.factor).*
+
+***a.** For Q10, combine stringr and base R functions with select to create the following datasets and then use the head function to show me the first 6 rows (the default amount for the head function)*
+
+***i.** A dataset called char_data that only contains columns with text*
+
+***ii.** A dataset called num_data that only contains columns with numbers*
+
+***iii.** A dataset called population_data that only contains columns pertaining to town population counts (not percents)*
+
+```{r question 10}
+
+#The following lines are used to produce unique data sets with different components.
+
+#This line creates a new data set that only contains characters.
+char_data <- data %>%
+  select(where(is.character))
+
+#This line creates a new data set which contains only numeric values.
+num_data <- data %>% 
+  select(where(is.numeric))
+
+#This line creates a new data set which oly contains population data.
+population_data <- data %>%
+  select(state, county, starts_with("pop"))
+
+head(char_data)
+head(num_data)
+head(population_data)
+
+```
