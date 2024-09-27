@@ -1,0 +1,68 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+title: 'Lab 1: Learning RMarkdown' author: "Isaias Perez" date: "2024-01-19" output: html_document
+
+\#*1. First, we are going to create an R Markdown file titled “Lab 1: Learning R Markdown.” To create an R Markdown file this, open R Studio and then use the following path: a. File -\> New File -\> R Markdown*
+
+\#*2. To ensure that your code is reproducible, we are going to create the project structure that we will be using for the rest of this semester. To accomplish this, do the following:*
+
+### Step 1 & 2 were completed prior.
+
+\#*3. Next, for this assignment, you will need the “here” and “tidyverse” packages. Install these packages using R syntax (i.e., do not use the install packages ‘point and click’ found within R Markdown). To make your code most readable, create a chunk called “Installing packages” that only contains the syntax that installs that package.*
+
+```{r installing packages}
+#install.packages("here")
+#install.packages("tidyverse")
+#install.packages("openxlsx")
+```
+
+\#*4. In another chunk, use the library function to load the “here” and “tidyverse” packages; as done previously, this chunk should only contain syntax using library functions to ensure that the code is most readable.*
+
+```{r load installed packages}
+library("here")
+library("tidyverse")
+library("openxlsx")
+```
+
+```{r setting up "here" function with appropriate working directioary. When unloading from zip file, make sure to change the file location so that the code can function on a your computer}
+
+here("C:/Users/isaia/OneDrive/Desktop/Lab 1 Final submission")
+```
+
+\#*5. Now that our packages are ready to be used, it is time to download our data. We are going to begin by downloading the internal R dataset titled “mtcars” and naming it “data” within R. Write the syntax needed to accomplish this (can be found in the Powerpoint) and place this within its own chunk.*
+
+```{r reading excel file and assigning a name}
+data <- read.csv(here("mtcars.csv"))
+```
+
+\#*6. One of the columns within mtcars is “drat.” This variable name is not intuitive, but it is important that we understand our variables before using them. To remedy this uncertainty, find any online resources to determine what “drat” stands for and what it means in relation to the dataset with your supporting evidence linked. Describe the variable under the chunk.*
+
+\# Column "drat" within mtcars refers to rear axle ratio as described within <https://rstudio-pubs-static.s3.amazonaws.com/61800_faea93548c6b49cc91cd0c5ef5059894.html>
+
+\### "drat" is described as the ratio of turns produced by the drive shaft to the amount of rotations of the wheel axle
+
+\#*7. After wrangling our data and making sense of it, place the below syntax in its own chunk and “clean” your new dataset. Explain to me in “human to computer” terms what this syntax does.*
+
+```{r data piping and filtering }
+data <- data %>% filter(drat > 2.8) # this line of code is responsible for passing the mtcars data set through a filter and removing values within column "drat" less than 2.8.
+```
+
+\#*8. mtcars is what I call an “internal dataset,” which programmers are kind enough to provide so that students like yourself can practice using R. However, in the real world, data is often collected and stored elsewhere and then imported into R. To practice this importing skill, use the function read.csv() to import your “movies_metadata.csv” and name the imported dataset “data.”*
+
+```{r calling data from external source}
+data <- read.csv(here("movies_metadata.xlsx.csv"))
+```
+
+\#*9. Next, use the below line of code and tell me which dataset is being used. Additionally, tell me why this data is being used when both the “mtcars” and “movies_metadata.csv” datasets were both previously named data.*
+
+```{r code provided by Professor Zepp}
+head(data, n =5) #This data set is "movies_metadata". movies_metadata is being used as R reassigns variable names to data which come later in the script.
+```
+
+\#*10. An emphasis in this class will be on data reproducibility. The below syntax is not reproducible because it will not run in your R program even though it runs in mine. For the final part of this assignment, tell me why the below syntax would not run within your R program even though it runs in mine. Additionally, tell me how you would fix this syntax and why your strategy works. data \<- read_csv("C:/Users/Jacob/Downloads/movies_metadata.csv")*
+
+#This line of code would not work as it a file path within a different computer and not mine. In order to fix this I would open the zippedfile that the script is located in a swap the file path with the one located in my own file manager. This should correct where R is "looking" and allow me to use the script.

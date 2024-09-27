@@ -1,0 +1,285 @@
+---
+title: 'Lab 7: advanced plotting'
+author: "Isaias Perez"
+date: "`r Sys.Date()`"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{R libraries}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+library(plotly)
+
+options(scipen = 999)
+```
+
+***1.** To begin, one of the aspects of programming I want to emphasize
+is oftentimes you can re-use old code in order to save you time and
+frustration. More specifically, as you gain more experience coding you
+should find yourself regularly going back to older code you’ve written
+to find ways to execute a task you’ve done previously without having to
+start from scratch. From there, you can just modify your code as needed
+so that you aren’t regularly re-learning how to do something.*
+
+***a.** For question 1, save mtcars as data and then repurpose our code
+from Lab 5 that turns our rownames into columns to create a column
+called “Model” within ‘data’ that contains the car models. Then use the
+head() function (used in Lab 1) to show me the first 5 rows of your new
+dataset.*
+
+```{r question 1}
+data <- mtcars 
+
+data <- data %>% rownames_to_column (var = "Model") 
+
+head(data, n = 5)
+```
+
+***2.** Repurposing old code is not only the case for data mutations; we
+can also use it for plots (or anything else). Additionally, in some
+cases you may not even need to change your code at all if you’re
+answering the same question or re-analyzing data with some additional
+steps.*
+
+***a.** For question 2, refer back to the previous code you wrote in
+“Lab 2 – ggplot” to recreate this plot. Note, the below plot used the
+theme_bw() function and you should not have to write any unique code to
+recreate this plot (including title and axes names).*
+
+***1.** Save this as plot_orig*
+
+```{r question 2}
+plot_orig <- ggplot(data = data, aes(x = wt, y = mpg)) + geom_point() +
+  stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Relationship of Car Weight to Miles per Gallon") + 
+  labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type")+
+  theme_bw()
+
+
+
+plot_orig
+```
+
+***3.** Additionally, you may find that you can regularly use old code
+as a “skeleton’ and then add to it to create something new. For example,
+let’s say I recently found out that I would be presenting this plot to a
+large lecture hall rooms with hundreds of rows and I wanted to make the
+dots bigger so that people in the last rows would still be able to see
+them. To do so, I could re-use my previous code while making one
+change.*
+
+***a.** For question 3, repurpose your old code to recreate the previous
+plot, but change the size of the dots to be 4 instead of the default
+(1).*
+
+***i.** Save this as plot_sized*
+
+```{r question 3}
+plot_sized <- ggplot(data = data, aes(x = wt, y = mpg)) + 
+  geom_point(aes(), size = 4) +
+  stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Relationship of Car Weight to Miles per Gallon") +
+  labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type") +
+  theme_bw()
+
+
+plot_sized
+```
+
+***4.** Another big part of learning to program is learning how to
+troubleshoot using error messages as guides. Building on our previous
+example, someone in the audience loved my talk and now they want me to
+deliver it to a group of car enthusiasts in a small conference room.
+Because of the smaller venue, I no longer need the bigger dots, so we
+can remove that from our code. However, I also know these car
+enthusiasts care about whether the cars are automatic (car automatically
+changes gears as needed) or manual (driver must change gears as the car
+requires it). Accordingly, I planned to use the below code to change the
+shape to reflect whether the car is manual or automatic (which is
+captured in the “am” column of our datset, but I realized something
+isn’t quite working when I run my planned code.*
+
+***a.** Code*
+
+***i.** Original code for Q1 with one change on the geom_point call*
+
+***1.** Original code for geom_point: geom_point()*
+
+***2.** Updated code for geom_point: geom_point(aes(shape = am))*
+
+***b.** For question 4, read the error message and then build off our
+previous lessons about using mutate to change a variable’s type in order
+to allow the code to run. Tell me in a sentence or two how you thought
+through what to do to resolve the error.*
+
+2.  Save this as plot_shapes
+
+```{r question 4 error code}
+
+#This chunk of code produces the following error when attempting to manipulate the shape of the points in the scatter plot.  
+
+#plot_shapes <- ggplot(data = data, aes(x = wt, y = mpg)) +
+  #geom_point(aes(shape = am)) +
+  #labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type") +
+  #stat_smooth(method = "lm", se = FALSE) 
+
+#plot_shapes #attempts to call scatter plot, but runs into an error. Most notable is error text "A continuous variable cannot be mapped to the shape aesthetic."
+
+#Using 'str' we can look at the structure of the variables and see that geom_point is considering 'am' as a continuous variable when it should be a discrete variable.
+#str(data$am)
+
+#This section was commented out due to the chunk causing errors when knitting to a html_document.
+```
+
+```{r question 4 edit}
+#This section of code is set to change the classification of variable 'am' from a continuous variable to a discrete variable
+data <- data %>%
+  mutate(am = as.factor((am))) 
+
+#We then attempt to run the code again but with the new classification for 'am'
+plot_shapes <- ggplot(data = data, aes(x = wt, y = mpg)) +
+  geom_point(aes(shape = am)) +
+  labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type") +
+  scale_shape_discrete(labels = c("Automatic", "Manual")) +
+  stat_smooth(method = "lm", se = FALSE) +
+  ggtitle("Relationship of Car Weight to Miles per Gallon")+
+  theme_bw()
+ 
+plot_shapes 
+```
+
+***5.** One of the nice parts about coding is we can often take the
+lessons we’ve learned from various other parts of code and put it
+together.*
+
+***a.** For question 5, change your geom_point call so it varies both
+the shapes by am and sets the size of the points to 4.*
+
+***b.** Save this as plot_final*
+
+```{r question 5}
+plot_final <- ggplot(data = data, aes(x = wt, y = mpg)) +
+  geom_point(aes(shape = am), size = 8) +
+  labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type") +
+  scale_shape_discrete(labels = c("Automatic", "Manual")) +
+  stat_smooth(method = "lm", se = FALSE) + 
+  ggtitle("Relationship of Car Weight to Miles per Gallon") +
+  theme_bw()
+  
+plot_final  
+
+
+
+```
+
+***6.** The car enthusiasts loved my last plot and want me to deliver it
+another time at a national conference within a huge lecture hall. I have
+a weird hunch that they’re going to want to know which cars correspond
+to which dots.*
+
+***a.** For question 6, use the ggplotly function to identify which car
+is the rightmost dot in the previous plot. Report the following
+information on that dot:*
+
+***i.** The car model* ***ii.** Whether the car has an automatic or
+manual transmission system* ***iii.** The reported weight of the car*
+***iv.** The reported miles per gallon of the car*
+
+```{r question 6}
+plotly_plot <- ggplot(data = data, aes(x = wt, y = mpg, Model = Model)) +
+  geom_point(aes(shape = am), size = 9) +
+  scale_shape_discrete(labels = c("Automatic", "Manual")) +
+  labs(x = "Car weight (in tons)", y = "Miles per gallon", shape = "Transmission Type") +
+  stat_smooth(method = "lm", se = FALSE) + 
+  ggtitle("Relationship of Car Weight to Miles per Gallon") 
+
+ggplotly(plotly_plot)
+
+
+```
+
+*Car model: Lincoln Continental* *Transmission system: Automatic*
+*Weight: 5.424 tons* *MPG: 10.4*
+
+***7.** A budding data scientist sees my presentation and is wowed by my
+final graph. They want to know how I iterated over time to create what
+they called “The most beautiful graph about miles per gallon and car
+weight that they’ve ever seen.”*
+
+***a.** For question 7, use ggarrange to position all 4 plots within one
+figure that has two columns, two rows, and legend set to “none”*
+
+```{r question 7}
+plot_orig <- plot_orig + ggtitle("")
+
+plot_sized <- plot_sized + ggtitle("") 
+
+plot_shapes <- plot_shapes + ggtitle("")
+
+plot_final <- plot_final + ggtitle("")
+
+ggarrange(plot_orig, plot_sized, plot_shapes, plot_final, nrow = 2, ncol = 2, legend = "none")
+```
+
+***8.** Our new figure looks mostly good, but the titles are far too
+bunched. Since they’re so repetitive, we’re going to make a change to
+the styling of our ggplots.*
+
+***a.** For question 8, do the following:*
+
+***i.** Remove the titles from the individual plots*
+
+***ii.** Set the title of your ggarrange figure to “The relationship
+between car weight and miles per gallon” and set it in a bold blue font
+that has a small enough size that all words in your title can be read.*
+
+```{r question 8}
+ggarrange_q8 <- ggarrange(plot_orig, plot_sized, plot_shapes, plot_final, nrow = 2, ncol = 2, legend = FALSE) 
+
+ggarrange_q8 <- annotate_figure(ggarrange_q8, top = text_grob("The relationship between car weight and miles per gallon", color = "blue", face = "bold"))
+
+ggarrange_q8
+```
+
+***9.** While I like the 2nd and 3rd plots we made (plot_sized,
+plot_shapes), I think that just showing the original plot (plot_orig)
+and the final plot (plot_final) vertically would allow the student to
+best see how far we came from our original plot until the final draft.*
+
+***a.** For question 9, alter your ggarrange call so that you only have
+the original and final plot stacked vertically on top of each other*
+
+```{r question 9}
+ggarrange_q9 <- ggarrange(plot_final, plot_orig, nrow = 2, ncol = 1, legend = FALSE)
+
+ggarrange_q9 <- annotate_figure(ggarrange_q9, top = text_grob("The relationship between car weight and miles per gallon", color = "blue", face = "bold"))
+
+ggarrange_q9
+
+```
+
+***10.** For question 10, alter your ggarrange call so that you only
+have the original and final plot placed horizontally next to each other.
+Then tell me which of the final 2 plots (this plot and the one created
+in Q9) you would opt to use in a presentation within our class and why.*
+
+```{r question 10}
+ggarrange_q10 <- ggarrange(plot_orig, plot_final, nrow = 1, legend = FALSE)
+
+ggarrange_q10 <- annotate_figure(ggarrange_q10, top = text_grob("The relationship between car weight and miles per gallon", color = "blue", face = "bold"))
+
+ggarrange_q10
+
+#I would use the plot from question 10. The plot from question 9 looks altered and may convey the wrong information simply due to the way the graphs look.
+
+
+```
