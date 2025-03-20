@@ -1,0 +1,564 @@
+---
+title: "Final_project"
+author: "Isaias Perez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+
+```{r installing packages, include=FALSE}
+install.packages("ggsci")
+install.packages("dplyr")
+install.packages("patchwork")
+install.packages("ggplot2")
+install.packages("ggpubr")
+install.packages("tidyverse")
+install.packages("psych")
+install.packages("carData")
+```
+
+
+```{r load in libraries, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggsci)
+library(dplyr)
+library(patchwork)
+library(ggpubr)
+library(psych)
+library(plotly)
+library(car)
+```
+
+
+# 1 Introduction
+
+Caffeinated beverages (i.e. coffee, energy drinks, and tea) are often the preferred choice of individuals to combat both cognitive and physical fatigue (Abalo, 2021; Maso, Boffetta, Negri, Vecchia, Bravi, 2021). Of the three mentioned beverages, coffee serves to be one of the most prominent sources of caffeine used world wide. Coffee enthusiast have built collective groups dedicated to preserving the rich history of growing and cultivating coffee and have formed organizations dedicated to rating commercial and specialty coffee. The Coffee Quality Institute is a global nonprofit 501(c)(3) organization which seeks to improve the quality of coffee available to the general population and to to also impact the lives for those who produce it. One of the major focuses of the CQI is to document and create open-access records of coffee being rated. These data sets are created using three major areas of focus. These areas being quality measure, farm metadata, and bean metadata. Quality measures covers certain traits that coffee raters score, traits such as aroma, flavor, and sweetness. Farm metadata is a subgroup directed at documenting data that covers categories such as country of origin and farm name. Lastly, bean metadata is aligned with specifying the processing method of coffee beans and bean species. These data sets, provided by the CQI, serve to assist individuals with a comprehensive and organized set for coffee exploration and discovery. 
+
+
+
+### 1.1 Research Question
+As with everything, most individuals have a preference for one thing or another. Coffee is not excluded from this list. The CQI has spent considerable time and resources setting up a rating system for individuals to become certified coffee raters. These raters focus on scoring coffee cups by certain traits and aim to identify and contribute meaningful information for datasets posted on the CQI official website. With this in mind, the focus of this paper seeks to identify what traits are most favored when rating coffee cups. More Specifically, what traits are good predictors of higher coffee cup ratings?
+
+# 2 Methods
+The data set being used comes from githubs tidytuesday for 07-07-2020. Githubs tidytuesday is a weekly  "social data project" which seeks to create engagement and collaboration of those within the R community and to further encourage individuals to practice and refine their skills for data wrangling and visualization. 
+
+### 2.1 CQI data set
+The CQI data set has multiple areas which could be evaluated, but the main focus of this paper is too evaluate the traits scored when rating a cup of coffee. In order to do this, wrangling and cleanining of the original data set was nessasary. This was achieved by first selecting variables of interest and creating a new data set for them. The variables have to do with the traits the CQI raters use to score the cup of coffee. Figure 1 discuss the traits in further detail. 
+
+```{r dataset retrival, include=FALSE}
+# Read in the data from the link
+coffee_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-07/coffee_ratings.csv')
+
+options(scipen = 999)
+
+```
+
+
+```{r data set cleaning, include=FALSE}
+
+#The bottom line of code selects specific variable which are of most use and recreates the dataset only using the following varibles within the select function.
+coffee_ratings <- select(coffee_ratings, 
+                               c(total_cup_points, species, variety, processing_method, aroma,
+                                 flavor,aftertaste, acidity, body, balance, uniformity, 
+                                 clean_cup, sweetness, color, 
+                                 country_of_origin, farm_name, region, 
+                                 producer, harvest_year, grading_date, 
+                                 altitude_high_meters)
+                               )
+#The following line are dedicated to locating and removing "NA" values in the dataset.
+coffee_ratings <- coffee_ratings %>% filter(!is.na(species))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(variety))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(altitude_high_meters))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(color))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(country_of_origin))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(farm_name))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(region))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(producer))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(harvest_year))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(grading_date))
+coffee_ratings <- coffee_ratings %>% filter(!is.na(processing_method))
+
+```
+
+
+```{r coffee traits tidying on original dataset, include=FALSE}
+coffee_ratings <- coffee_ratings %>%
+  filter(aroma >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(flavor >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(aftertaste >1)
+
+coffee_ratings <- coffee_ratings %>%
+  filter(acidity >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(body >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(balance >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(uniformity >1) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(sweetness >1)
+
+coffee_ratings <- coffee_ratings %>%
+  filter(moisture > 0.05) 
+
+coffee_ratings <- coffee_ratings %>%
+  filter(total_cup_points > 50.0)
+```
+
+
+```{r Trait definition table}
+terms <- c("Aroma", "Flavor", "Aftertaste", "Acidity", "Body", "Balance", "Uniformity", "Cup Cleanliness", "Sweetness", "Defects")
+definitions <- c("The aromatic aspects include Fragrance (defined as the smell of the ground coffee when still dry) and Aroma (the smell of the coffee when infused with hot water).", "Flavor represents the coffee's principal character, the mid-range notes, in between the first impressions given by the coffee's first aroma and acidity to its final aftertaste.", "Aftertaste is defined as the length of positive flavor (taste and aroma) qualities emanating from the back of the palate and remaining after the coffee is expectorated or swallowed.", "Acidity is often described as brightness when favorable or sour when unfavorable. At its best, acidity contributes to a coffee's liveliness, sweetness, and fresh- fruit character and is almost immediately experienced and evaluated when the coffee is first slurped into the mouth.", "The definition of “body” is used to indicate the structure of the drink and corresponds to a certain coffee consistency felt on the palate.", "Tasting term applied to coffees for which no single characteristic overwhelms other, but that display sufficient complexity to be intersting","Uniformity refers to consistency of flavor of the different cups of the sample tasted.", "Clean Cup refers to a lack of interfering negative impressions from first ingestion to final aftertaste, a transparency of the cup.", "The overall sweetness of the cup of coffee", "Unpleasent flavor characterisitcs caused by problems throughout production, oftne due to micro-organism invasion or excessive exposure to moisture")
+
+definitions_df <- data.frame(Terms = terms, Definitions = definitions)
+
+kable(definitions_df)
+
+
+```
+
+
+
+### 2.2 Score Standardization and outlier identification
+```{r Standardizing of scores, include=FALSE}
+
+coffee_ratings_standarized <- coffee_ratings %>%
+  mutate(across(c(aroma, flavor, aftertaste, acidity, 
+                  body, balance, uniformity, sweetness, moisture),
+                scale))
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  select(-c('clean_cup'))
+
+```
+
+
+```{r traits boxplots, include=FALSE}
+Aroma_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = aroma)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Flavor_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = flavor)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Aftertaste_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = aftertaste)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Acidity_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = acidity)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Body_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = body)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Uniformity_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = uniformity)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Sweetness_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = sweetness)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Moisture_zscore_boxplot_AO <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = moisture)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+```
+
+
+```{r zscores_boxplots_fig_1, include=FALSE}
+# assigning to a ggarrange
+zscores_boxplots_fig_1 <- ggarrange(Aroma_zscore_boxplot_AO, Flavor_zscore_boxplot_AO, Aftertaste_zscore_boxplot_AO, Acidity_zscore_boxplot_AO, Body_zscore_boxplot_AO, Uniformity_zscore_boxplot_AO, Sweetness_zscore_boxplot_AO, Moisture_zscore_boxplot_AO, common.legend = FALSE) 
+
+# adding title to fig
+zscores_boxplots_fig_1 <- annotate_figure(zscores_boxplots_fig_1, top = text_grob("Box and Wisker plots of coffee traits orginal observations"))
+
+zscores_boxplots_fig_1
+
+```
+
+
+```{r additional filtering of standarized values to show only -3 and +3, include=FALSE}
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(aroma > -3.0 & aroma < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(flavor > -3.0 & flavor < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(aftertaste > -3.0 & aftertaste < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(acidity > -3.0 & acidity < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(body > -3.0 & body < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(balance > -3.0 & balance < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(aroma > -3.0 & aroma < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(uniformity > -3.0 & uniformity < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(sweetness > -3.0 & sweetness < 3.00) 
+
+coffee_ratings_standarized <- coffee_ratings_standarized %>%
+  filter(moisture > -3.0 & moisture < 3.00) 
+
+#It is bad practice to alter the number of observations.
+#coffee_ratings_standarized <- coffee_ratings_standarized[-c(401:618), ]
+```
+
+
+```{r boxplot after setting -3 and +3 z-score filtering, include=FALSE}
+Aroma_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = aroma)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Flavor_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = flavor)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Aftertaste_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = aftertaste)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Acidity_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = acidity)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Body_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = body)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Uniformity_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = uniformity)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Sweetness_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = sweetness)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+Moisture_zscore_boxplot <- ggplot(data = coffee_ratings_standarized, aes(x = factor(0), y = moisture)) +
+  geom_boxplot() + 
+  scale_x_discrete(breaks = NULL) +
+  xlab(NULL)
+
+
+```
+
+
+```{r zcores_boxplot_fig_2, include=FALSE}
+# assigning to a ggarrange
+zscores_boxplots_fig_2 <- ggarrange(Aroma_zscore_boxplot, Flavor_zscore_boxplot, Aftertaste_zscore_boxplot, Acidity_zscore_boxplot, Body_zscore_boxplot, Uniformity_zscore_boxplot, Sweetness_zscore_boxplot, Moisture_zscore_boxplot, common.legend = FALSE) 
+
+# adding title to fig
+zscores_boxplots_fig_2 <- annotate_figure(zscores_boxplots_fig_2, top = text_grob("Box and Wisker plots of coffee traits refined observations"))
+
+zscores_boxplots_fig_2
+```
+
+
+
+# 3 Data Analysis
+
+```{r linear model, include=FALSE}
+model_1 <-  lm(total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + sweetness + moisture, coffee_ratings_standarized)
+
+#model_2 is without uniformity
+model_2 <-  lm(total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + sweetness + moisture, coffee_ratings_standarized)
+
+#model_3 is without uniformity and moisture
+model_3 <-  lm(total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + sweetness, coffee_ratings_standarized)
+
+#model_aroma 
+model_aroma <-  lm(total_cup_points ~ aroma, coffee_ratings_standarized)
+
+#model_flavor 
+model_flavor <-  lm(total_cup_points ~ flavor, coffee_ratings_standarized)
+
+#model_aftertaste 
+model_aftertaste <-  lm(total_cup_points ~ aftertaste, coffee_ratings_standarized)
+
+#model_acidity 
+model_acidity <-  lm(total_cup_points ~ acidity, coffee_ratings_standarized)
+
+#model_body
+model_body <-  lm(total_cup_points ~ body, coffee_ratings_standarized)
+
+#model_balance 
+model_balance <-  lm(total_cup_points ~ balance, coffee_ratings_standarized)
+
+#model_uniformity 
+model_uniformity <-  lm(total_cup_points ~ uniformity, coffee_ratings_standarized)
+
+#model_sweetness 
+model_sweetness <-  lm(total_cup_points ~ sweetness, coffee_ratings_standarized)
+
+#model_moisture 
+model_moisture <-  lm(total_cup_points ~ moisture, coffee_ratings_standarized)
+```
+
+### 3.1 Assumption's check
+
+```{r Assumption 1 linear relationship, include=FALSE}
+Aroma_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = aroma, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Flavor_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = flavor, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Aftertaste_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = aftertaste, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+  
+Acidity_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = acidity, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Body_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = body, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Balance_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = balance, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Uniformity_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = uniformity, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Sweetness_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = sweetness, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+Moisture_jitter <- ggplot(data = coffee_ratings_standarized) + 
+  geom_jitter(aes(x = moisture, y = total_cup_points), size = 1.5, shape = 1, alpha = .4) +
+  scale_x_continuous(limits = c(-3, 3))
+
+
+#assumption passed
+```
+
+
+
+```{r Jitterplots of traits assumption 1,include=FALSE}
+# assigning to a ggarrange
+Traits_jitterplots_fig_3 <- ggarrange(Aroma_jitter, Flavor_jitter, Aftertaste_jitter, Acidity_jitter, Body_jitter, Balance_jitter, Uniformity_jitter, Sweetness_jitter, Moisture_jitter, common.legend = FALSE) 
+
+# adding title to fig
+Traits_jitterplots_fig_3 <- annotate_figure(Traits_jitterplots_fig_3, top = text_grob("Scatter plots of coffee traits and total cup points"))
+
+Traits_jitterplots_fig_3
+```
+
+
+```{r fitted values v residuals check for homoscedasticity Assumption 2, include=FALSE}
+# Create data frame for ggplot
+RVF_acidity <- data.frame(Fitted = model_acidity$fitted.values,
+                        Residuals = model_acidity$residuals)
+
+RVF_aftertaste <- data.frame(Fitted = model_aftertaste$fitted.values,
+                        Residuals = model_aftertaste$residuals)
+
+RVF_aroma <- data.frame(Fitted = model_aroma$fitted.values,
+                        Residuals = model_aroma$residuals)
+
+RVF_balance <- data.frame(Fitted = model_balance$fitted.values,
+                        Residuals = model_balance$residuals)
+
+RVF_body <- data.frame(Fitted = model_body$fitted.values,
+                        Residuals = model_body$residuals)
+
+RVF_flavor <- data.frame(Fitted = model_flavor$fitted.values,
+                        Residuals = model_flavor$residuals)
+
+RVF_moisture <- data.frame(Fitted = model_moisture$fitted.values,
+                        Residuals = model_moisture$residuals)
+
+RVF_sweetness <- data.frame(Fitted = model_sweetness$fitted.values,
+                        Residuals = model_sweetness$residuals)
+
+RVF_uniformity <- data.frame(Fitted = model_uniformity$fitted.values,
+                        Residuals = model_uniformity$residuals)
+
+#Create residual vs. fitted values plot using ggplot2
+RVF_acidity_plot <- ggplot(RVF_acidity, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_aftertaste_plot <- ggplot(RVF_aftertaste, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_aroma_plot <- ggplot(RVF_aroma, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_balance_plot <- ggplot(RVF_balance, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_body_plot <- ggplot(RVF_body, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals")+
+  theme_bw()
+
+RVF_flavor_plot <- ggplot(RVF_flavor, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_moisture_plot <- ggplot(RVF_moisture, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_sweetness_plot <- ggplot(RVF_sweetness, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+RVF_uniformity_plot <- ggplot(RVF_uniformity, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "black") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+# Second graph
+#plot(model_1, 1)
+#plot(model_2, 1)
+#plot(model_3, 1)
+
+#RVF_acidity_plot <- plot(model_acidity, 1)
+#RVF_aftertaste_plot <- plot(model_aftertaste, 1)
+#RVF_aroma_plot <- plot(model_aroma, 1)
+#RVF_balance_plot <- plot(model_balance, 1)
+#RVF_body_plot <- plot(model_body, 1)
+#RVF_flavor_plot <- plot(model_flavor, 1)
+#RVF_moisture_plot <- plot(model_moisture, 1)
+#RVF_sweetness_plot <- plot(model_sweetness, 1)
+#RVF_uniformity_plot <- plot(model_uniformity, 1)
+
+#assumption violated
+```
+
+
+```{r fitted values v residuals for homoscedasticity assumption 2, include=FALSE}
+
+# assigning to a ggarrange
+Traits_ResidualsvFitted_fig_4 <- ggarrange(RVF_acidity_plot, RVF_aftertaste_plot, RVF_aroma_plot, RVF_balance_plot, RVF_body_plot, RVF_flavor_plot, RVF_moisture_plot, RVF_sweetness_plot, RVF_uniformity_plot, common.legend = FALSE) 
+
+# adding title to fig
+Traits_ResidualsvFitted_fig_4 <- annotate_figure(Traits_ResidualsvFitted_fig_4, top = text_grob("Residuals Vs. Fitted"))
+
+Traits_ResidualsvFitted_fig_4
+
+
+```
+
+
+```{r assumption 3 Normality, include=FALSE}
+plot(model_1, 2)
+plot(model_2, 2)
+plot(model_3, 2)
+
+
+plot(model_acidity, 2)
+plot(model_aftertaste, 2)
+plot(model_aroma, 2)
+plot(model_balance, 2)
+plot(model_body, 2)
+plot(model_flavor, 2)
+plot(model_moisture, 2)
+plot(model_sweetness, 2)
+plot(model_uniformity, 2)
+
+
+
+
+
+#somewhat violated
+```
+
+# 4 Results
+
+```{r summary of LM, include=FALSE}
+summary(model_3)
+
+```
+
+
+
+
+
+
+
+
+# 5 Conclusion 
+
+### 5.1 Discussion
+
+### 5.2 Limitations
+
+
+
+#References
+
+Abalo, R. (2021). Coffee and caffeine consumption for human health. Nutrients, 13(9), 2918-. https://doi.org/10.3390/nu13092918
+
+Di Maso, M., Boffetta, P., Negri, E., La Vecchia, C., & Bravi, F.(2021). Caffeinated Coffee Consumption and Health Outcomes in the US Population: A Dose–Response Meta-Analysis and Estimation of Disease Cases and Deaths Avoided. Advances in Nutrition (Bethesda, Md.), 12(4), 1160–1176.https://doi.org/10.1093/advances/nmaa177
+
+
+
+
+
+
